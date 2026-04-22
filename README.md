@@ -1,17 +1,45 @@
-# e_ticketing_helpdesk
+# E-Ticketing Helpdesk
 
-A new Flutter project.
+Aplikasi **Helpdesk Ticketing System** berbasis Flutter yang digunakan untuk mengelola aduan pengguna secara digital.
 
-## Getting Started
+# Fitur Utama
 
-This project is a starting point for a Flutter application.
+# User
+- Membuat tiket aduan
+- Melihat status tiket
+- Melihat notifikasi
+- Mengirim komentar
+- Upload gambar (bukti masalah)
 
-A few resources to get you started if this is your first Flutter project:
+# Helpdesk
+- Melihat tiket masuk
+- Update status tiket
+- Memberikan respon
+- Melihat riwayat tiket
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+# Admin
+- Melihat dashboard laporan
+- Mengelola tiket
+- Mengelola agen/helpdesk
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Teknologi yang Digunakan
+- Flutter
+- Dio (HTTP Client API)
+- Riverpod (State Management)
+- REST API (Dummy / Backend)
+
+## Cara Menjalankan Project
+
+
+```bash
+1. Clone Repository
+git clone https://github.com/Nazlaaa22/434241133_NazlatulKhoiriyah_TIB4_UTS.git
+
+2. Masuk ke Folder Project
+cd 434241133_NazlatulKhoiriyah_TIB4_UTS
+
+3. Install Dependency
+flutter pub get
+
+4. Jalankan Aplikasi
+flutter run
