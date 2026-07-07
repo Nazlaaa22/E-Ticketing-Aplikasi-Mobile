@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:e_ticketing_helpdesk/features/auth/data/repositories/auth_repository.dart';
 import 'forgot_password_page.dart';
 import 'register_page.dart';
+import '../../../../core/services/auth_service.dart';
 import 'package:e_ticketing_helpdesk/features/home/presentation/pages/home_page.dart';
-import 'package:e_ticketing_helpdesk/features/home/presentation/pages/user_home_page.dart';
 import 'package:e_ticketing_helpdesk/features/home/presentation/pages/helpdesk_home_page.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:e_ticketing_helpdesk/features/home/presentation/pages/user_home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,233 +17,498 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
 
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
-  /// 🔥 GOOGLE SIGN IN INSTANCE
+  final AuthRepository _repository = AuthRepository();
+
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  void _login() {
-    String username = usernameController.text.trim();
+  bool isLoading = false;
+  bool obscurePassword = true;
+  bool rememberMe = false;
 
-    if (username == "admin") {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const HomePage(role: "admin"),
+  Future<void> _login() async {
+
+    if (emailController.text.isEmpty ||
+        passwordController.text.isEmpty) {
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Email dan Password wajib diisi"),
         ),
       );
-    } else if (username == "helpdesk") {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const HelpdeskHomePage(),
-        ),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const UserHomePage(),
-        ),
-      );
+      return;
     }
-  }
 
-  /// 🔥 LOGIN GOOGLE
-  Future<void> _loginWithGoogle() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
-      final account = await _googleSignIn.signIn();
 
-      if (account != null) {
-        // 👉 sementara masuk sebagai USER
+      final response = await _repository.login(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
+
+      final user = response["user"];
+      final role = user["role"];
+
+      // ===========================
+      // SIMPAN SESSION LOGIN
+      // ===========================
+      await AuthService().saveUser(
+        id: user["id"],
+        name: user["name"],
+        email: user["email"],
+        role: user["role"],
+      );
+
+      if (!mounted) return;
+
+      if (role == "admin") {
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const HomePage(role: "admin"),
+          ),
+        );
+
+      } else if (role == "helpdesk") {
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const HelpdeskHomePage(),
+          ),
+        );
+
+      } else {
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (_) => const UserHomePage(),
           ),
         );
+
       }
+
     } catch (e) {
-      debugPrint("Google Sign-In Error: $e");
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Login gagal\n$e"),
+        ),
+      );
+
     }
+
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+
+  }
+
+  Future<void> _loginGoogle() async {
+
+    try {
+
+      final account = await _googleSignIn.signIn();
+
+      if (account != null) {
+
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const UserHomePage(),
+          ),
+        );
+
+      }
+
+    } catch (_) {}
+
+  }
+
+  @override
+  void dispose() {
+
+    emailController.dispose();
+    passwordController.dispose();
+
+    super.dispose();
+
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
 
-      body: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            width: 350,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 20,
-                )
-              ],
-            ),
+        backgroundColor: const Color(0xffF5F7FB),
 
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+        body: SafeArea(
 
-                /// ICON
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.support_agent,
-                    size: 40,
-                    color: Colors.blue,
-                  ),
-                ),
+            child: Center(
 
-                const SizedBox(height: 16),
+                child: SingleChildScrollView(
 
-                /// TITLE
-                const Text(
-                  "E-Ticketing Helpdesk",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                    padding: const EdgeInsets.all(24),
 
-                const SizedBox(height: 6),
+                    child: ConstrainedBox(
 
-                const Text(
-                  "Masuk ke akun anda",
-                  style: TextStyle(color: Colors.grey),
-                ),
+                        constraints: const BoxConstraints(
+                          maxWidth: 430,
+                        ),
 
-                const SizedBox(height: 20),
+                        child: Card(
 
-                /// USERNAME
-                _inputField(
-                  controller: usernameController,
-                  hint: "Username",
-                  icon: Icons.person,
-                ),
+                            elevation: 8,
 
-                const SizedBox(height: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(28),
+                            ),
 
-                /// PASSWORD
-                _inputField(
-                  controller: passwordController,
-                  hint: "Password",
-                  icon: Icons.lock,
-                  isPassword: true,
-                ),
+                            child: Padding(
 
-                const SizedBox(height: 20),
+                              padding: const EdgeInsets.all(24),
 
-                /// BUTTON LOGIN
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _login,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                              child: Column(
+
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+
+                                children: [
+
+                                const Row(
+
+                                mainAxisAlignment: MainAxisAlignment.center,
+
+                                children: [
+
+                                  Icon(
+                                    Icons.confirmation_num,
+                                    color: Color(0xff2563EB),
+                                  ),
+
+                                  SizedBox(width: 8),
+
+                                  Text(
+                                    "Helpdesk Admin",
+                                    style: TextStyle(
+                                      color: Color(0xff2563EB),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+
+                                ],
+
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              ClipRRect(
+
+                                borderRadius: BorderRadius.circular(18),
+
+                                child: Image.asset(
+                                  "assets/images/login.png",
+                                  height: 180,
+                                  fit: BoxFit.cover,
+                                ),
+
+                              ),
+
+                              const SizedBox(height: 24),
+
+                              const Text(
+
+                                "Welcome Back",
+
+                                textAlign: TextAlign.center,
+
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
+
+                              ),
+
+                              const SizedBox(height: 8),
+
+                              const Text(
+
+                                "Access your administrative ticketing dashboard",
+
+                                textAlign: TextAlign.center,
+
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                ),
+
+                              ),
+
+                              const SizedBox(height: 28),
+
+                              const Text(
+                                "Work Email",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+
+                              const SizedBox(height: 8),
+
+                              TextField(
+
+                                controller: emailController,
+
+                                decoration: InputDecoration(
+
+                                  hintText: "name@company.com",
+
+                                  prefixIcon: const Icon(Icons.email_outlined),
+
+                                  filled: true,
+
+                                  fillColor: Colors.grey.shade100,
+
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide.none,
+                                  ),
+
+                                ),
+
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              const Text(
+                                "Password",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+
+                              const SizedBox(height: 8),
+
+                              TextField(
+
+                                controller: passwordController,
+
+                                obscureText: obscurePassword,
+
+                                decoration: InputDecoration(
+
+                                  hintText: "••••••••",
+
+                                  prefixIcon: const Icon(Icons.lock_outline),
+
+                                  suffixIcon: IconButton(
+
+                                    icon: Icon(
+                                      obscurePassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                    ),
+
+                                    onPressed: () {
+
+                                      setState(() {
+                                        obscurePassword = !obscurePassword;
+                                      });
+
+                                    },
+
+                                  ),
+
+                                  filled: true,
+
+                                  fillColor: Colors.grey.shade100,
+
+                                  border: OutlineInputBorder(
+
+                                    borderRadius: BorderRadius.circular(16),
+
+                                    borderSide: BorderSide.none,
+
+                                  ),
+
+                                ),
+
+                              ),
+                                  const SizedBox(height: 16),
+
+                                  Row(
+                                    children: [
+                                      Checkbox(
+                                        value: rememberMe,
+                                        activeColor: const Color(0xff2563EB),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            rememberMe = value ?? false;
+                                          });
+                                        },
+                                      ),
+
+                                      const Text(
+                                        "Remember Me",
+                                        style: TextStyle(fontSize: 13),
+                                      ),
+
+                                      const Spacer(),
+
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                              const ForgotPasswordPage(),
+                                            ),
+                                          );
+                                        },
+                                        child: const Text("Forgot Password?"),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 20),
+
+                                  SizedBox(
+                                    height: 55,
+                                    child: ElevatedButton(
+                                      onPressed: isLoading ? null : _login,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xff2563EB),
+                                        foregroundColor: Colors.white,
+                                        elevation: 0,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                          BorderRadius.circular(16),
+                                        ),
+                                      ),
+                                      child: isLoading
+                                          ? const SizedBox(
+                                        height: 22,
+                                        width: 22,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2.5,
+                                        ),
+                                      )
+                                          : const Row(
+                                        mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            "Sign In to Dashboard",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          SizedBox(width: 8),
+                                          Icon(Icons.arrow_forward),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 28),
+
+                                  Row(
+                                    children: const [
+                                      Expanded(child: Divider()),
+                                      Padding(
+                                        padding:
+                                        EdgeInsets.symmetric(horizontal: 12),
+                                        child: Text(
+                                          "OR CONTINUE WITH",
+                                          style: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(child: Divider()),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 20),
+
+                                  SizedBox(
+                                    height: 55,
+                                    child: OutlinedButton.icon(
+                                      onPressed: _loginGoogle,
+                                      style: OutlinedButton.styleFrom(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                          BorderRadius.circular(16),
+                                        ),
+                                      ),
+                                      icon: const Icon(
+                                        Icons.g_mobiledata,
+                                        color: Colors.red,
+                                        size: 32,
+                                      ),
+                                      label: const Text(
+                                        "Login with Google",
+                                        style: TextStyle(
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 24),
+
+                                  Row(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.center,
+                                    children: [
+                                      const Text(
+                                        "Don't have an account? ",
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                              const RegisterPage(),
+                                            ),
+                                          );
+                                        },
+                                        child: const Text(
+                                          "Register",
+                                          style: TextStyle(
+                                            color: Color(0xff2563EB),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ),
                     ),
-                    child: const Text("Masuk"),
-                  ),
                 ),
-
-                const SizedBox(height: 12),
-
-                /// 🔥 BUTTON GOOGLE (TAMBAHAN)
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: _loginWithGoogle,
-                    icon: const Icon(Icons.g_mobiledata, size: 28, color: Colors.red),
-                    label: const Text("Masuk dengan Google"),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                /// LUPA PASSWORD
-                InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ForgotPasswordPage(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    "Lupa password?",
-                    style: TextStyle(color: Colors.blue),
-                  ),
-                ),
-
-                const SizedBox(height: 6),
-
-                /// REGISTER
-                InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const RegisterPage(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    "Belum punya akun? Daftar",
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ),
-              ],
             ),
-          ),
         ),
-      ),
-    );
-  }
-
-  Widget _inputField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    bool isPassword = false,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: isPassword,
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          hintText: hint,
-          prefixIcon: Icon(icon),
-        ),
-      ),
     );
   }
 }

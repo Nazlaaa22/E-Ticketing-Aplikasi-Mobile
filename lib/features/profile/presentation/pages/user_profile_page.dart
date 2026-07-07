@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
+
 import 'package:e_ticketing_helpdesk/features/profile/presentation/pages/user_change_password_page.dart';
 import 'package:e_ticketing_helpdesk/features/profile/presentation/pages/user_edit_profile_page.dart';
 import 'package:e_ticketing_helpdesk/features/profile/presentation/pages/user_ticket_history_page.dart';
-import 'package:flutter/material.dart';
+
 import '../../../auth/presentation/pages/login_page.dart';
 
 class UserProfilePage extends StatelessWidget {
@@ -9,179 +11,557 @@ class UserProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+        backgroundColor: theme.scaffoldBackgroundColor,
 
-      body: Column(
-        children: [
+        body: SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
 
-          /// 🔥 HEADER BIRU (KONSISTEN)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(16, 50, 16, 24),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF4F8CFF), Color(0xFF2563EB)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.vertical(
-                bottom: Radius.circular(24),
-              ),
-            ),
-            child: Column(
-              children: [
+                /// =========================
+                /// HEADER
+                /// =========================
 
-                /// AVATAR
-                const CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.person, size: 40, color: Colors.blue),
-                ),
-
-                const SizedBox(height: 12),
-
-                /// NAMA
-                const Text(
-                  "Nazlatul Khoiriyah",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-
-                const SizedBox(height: 4),
-
-                /// EMAIL
-                const Text(
-                  "user@email.com",
-                  style: TextStyle(color: Colors.white70),
-                ),
-
-                const SizedBox(height: 8),
-
-                /// ROLE BADGE
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(
+                  20,
+                  25,
+                  20,
+                  30,
+                ),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xff2563EB),
+                      Color(0xff60A5FA),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: const Text(
-                    "User",
-                    style: TextStyle(
-                      color: Colors.white,
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(35),
+                  ),
+                ),
+                child: Column(
+                  children: [
+
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Icon(
+                        Icons.settings,
+                        color: Colors.white.withOpacity(.9),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius:
+                        BorderRadius.circular(50),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.person,
+                          size: 55,
+                          color: Color(0xff2563EB),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    const Text(
+                      "Nazlatul Khoiriyah",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    Container(
+                      padding:
+                      const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                        Colors.white.withOpacity(.18),
+                        borderRadius:
+                        BorderRadius.circular(30),
+                      ),
+                      child: const Text(
+                        "USER",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    const Row(
+                      mainAxisAlignment:
+                      MainAxisAlignment.center,
+                      children: [
+
+                        Icon(
+                          Icons.email_outlined,
+                          color: Colors.white70,
+                          size: 18,
+                        ),
+
+                        SizedBox(width: 6),
+
+                        Text(
+                          "user@email.com",
+                          style: TextStyle(
+                            color: Colors.white70,
+                          ),
+                        ),
+
+                      ],
+                    ),
+
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+              /// =========================
+              /// INFO CARD
+              /// =========================
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark
+                            ? Colors.transparent
+                            : Colors.black.withOpacity(.05),
+                        blurRadius: 14,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+
+                      _infoItem(
+                        Icons.calendar_month,
+                        "Bergabung",
+                        "2025",
+                        Colors.blue,
+                      ),
+
+                      Container(
+                        width: 1,
+                        height: 55,
+                        color: Colors.grey.withOpacity(.2),
+                      ),
+
+                      _infoItem(
+                        Icons.confirmation_number,
+                        "Ticket",
+                        "18",
+                        Colors.green,
+                      ),
+
+                      Container(
+                        width: 1,
+                        height: 55,
+                        color: Colors.grey.withOpacity(.2),
+                      ),
+
+                      _infoItem(
+                        Icons.verified_user,
+                        "Status",
+                        "Aktif",
+                        Colors.orange,
+                      ),
+
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Pengaturan",
+                    style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              ],
+              ),
+
+              const SizedBox(height: 14),
+
+              _menuCard(
+                context,
+                icon: Icons.person_outline,
+                title: "Edit Profil",
+                subtitle: "Perbarui data akun",
+                color: Colors.blue,
+                page: const UserEditProfilePage(),
+              ),
+
+              _menuCard(
+                context,
+                icon: Icons.lock_outline,
+                title: "Ganti Password",
+                subtitle: "Amankan akun kamu",
+                color: Colors.orange,
+                page: const UserChangePasswordPage(),
+              ),
+
+              _menuCard(
+                context,
+                icon: Icons.history,
+                title: "Riwayat Tiket",
+                subtitle: "Lihat semua tiket",
+                color: Colors.green,
+                page: const UserTicketHistoryPage(),
+              ),
+
+              _menuCard(
+                context,
+                icon: Icons.info_outline,
+                title: "Tentang Aplikasi",
+                subtitle: "Versi 1.0.0",
+                color: Colors.indigo,
+                page: const SizedBox(),
+              ),
+
+              const SizedBox(height: 24),
+                  /// =========================
+                  /// LOGOUT
+                  /// =========================
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () => _confirmLogout(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 18,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(.08),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.red.withOpacity(.15),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(.12),
+                                borderRadius:
+                                BorderRadius.circular(14),
+                              ),
+                              child: const Icon(
+                                Icons.logout_rounded,
+                                color: Colors.red,
+                              ),
+                            ),
+
+                            const SizedBox(width: 16),
+
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                                children: [
+
+                                  Text(
+                                    "Logout",
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+
+                                  SizedBox(height: 4),
+
+                                  Text(
+                                    "Keluar dari akun pengguna",
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+
+                                ],
+                              ),
+                            ),
+
+                            const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              color: Colors.red,
+                              size: 18,
+                            ),
+
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+
+                ],
+              ),
             ),
+        ),
+    );
+  }
+
+  /// =========================
+  /// INFO ITEM
+  /// =========================
+
+  Widget _infoItem(
+      IconData icon,
+      String title,
+      String value,
+      Color color,
+      ) {
+    return Column(
+      children: [
+
+        CircleAvatar(
+          radius: 22,
+          backgroundColor: color.withOpacity(.12),
+          child: Icon(
+            icon,
+            color: color,
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.grey,
+          ),
+        ),
+
+        const SizedBox(height: 4),
+
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: color,
+          ),
+        ),
+
+      ],
+    );
+  }
+
+  /// =========================
+  /// LOGOUT DIALOG
+  /// =========================
+
+  void _confirmLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Text("Logout"),
+        content: const Text(
+          "Apakah kamu yakin ingin keluar dari akun?",
+        ),
+        actions: [
+
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text("Batal"),
           ),
 
-          const SizedBox(height: 12),
-
-          /// 🔥 MENU LIST
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-
-                _menuCard(
-                  icon: Icons.edit,
-                  title: "Edit Profil",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const UserEditProfilePage(),
-                      ),
-                    );
-                  },
-                ),
-
-                _menuCard(
-                  icon: Icons.lock,
-                  title: "Ganti Password",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const UserChangePasswordPage(),
-                      ),
-                    );
-                  },
-                ),
-
-                _menuCard(
-                  icon: Icons.history,
-                  title: "Riwayat Tiket",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const UserTicketHistoryPage(),
-                      ),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 10),
-
-                /// LOGOUT
-                _menuCard(
-                  icon: Icons.logout,
-                  title: "Logout",
-                  color: Colors.red,
-                  onTap: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const LoginPage()),
-                          (route) => false,
-                    );
-                  },
-                ),
-              ],
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
             ),
-          )
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const LoginPage(),
+                ),
+                    (route) => false,
+              );
+            },
+            child: const Text("Logout"),
+          ),
+
         ],
       ),
     );
   }
+  /// =========================
+  /// MENU CARD
+  /// =========================
 
-  /// 🔥 MENU CARD (LEBIH CLEAN)
-  Widget _menuCard({
-    required IconData icon,
-    required String title,
-    Color? color,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-          )
-        ],
+  Widget _menuCard(
+      BuildContext context, {
+        required IconData icon,
+        required String title,
+        required String subtitle,
+        required Color color,
+        required Widget page,
+      }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 18,
+        vertical: 7,
       ),
-      child: ListTile(
-        leading: Icon(icon, color: color ?? Colors.black),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            color: color ?? Colors.black,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            if (page is SizedBox) return;
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => page,
+              ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: isDark
+                      ? Colors.transparent
+                      : Colors.black.withOpacity(.05),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(.12),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: color,
+                    size: 28,
+                  ),
+                ),
+
+                const SizedBox(width: 16),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                    children: [
+
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+
+                      const SizedBox(height: 5),
+
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: theme.colorScheme.onSurface
+                              .withOpacity(.65),
+                        ),
+                      ),
+
+                    ],
+                  ),
+                ),
+
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: theme.colorScheme.onSurface
+                        .withOpacity(.55),
+                  ),
+                ),
+
+              ],
+            ),
           ),
         ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: onTap,
       ),
     );
   }

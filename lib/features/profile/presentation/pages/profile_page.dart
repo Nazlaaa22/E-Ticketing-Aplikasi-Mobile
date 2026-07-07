@@ -1,80 +1,172 @@
 import 'package:flutter/material.dart';
-import '../../../auth/presentation/pages/login_page.dart';
-import 'edit_profile_page.dart';
-import 'change_password_page.dart';
+import 'package:provider/provider.dart';
 
-class ProfilePage extends StatelessWidget {
+import '../../../../core/services/auth_service.dart';
+import '../../../../core/theme/theme_provider.dart';
+
+import '../../../auth/presentation/pages/login_page.dart';
+import 'change_password_page.dart';
+import 'edit_profile_page.dart';
+
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+
+  final AuthService authService = AuthService();
+
+  String userName = "";
+  String userEmail = "";
+  String userRole = "";
+
+  @override
+  void initState() {
+    super.initState();
+    loadUser();
+  }
+
+  Future<void> loadUser() async {
+
+    userName = await authService.getName() ?? "";
+    userEmail = await authService.getEmail() ?? "";
+    userRole = await authService.getRole() ?? "";
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+
+    final theme = Theme.of(context);
+
+    final themeProvider =
+    Provider.of<ThemeProvider>(context);
+
+    final darkMode = themeProvider.isDark;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+        backgroundColor: theme.scaffoldBackgroundColor,
 
-      appBar: AppBar(
-        title: const Text("Profil"),
-        centerTitle: true,
-      ),
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: theme.scaffoldBackgroundColor,
+          centerTitle: true,
 
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
-
-          /// AVATAR
-          CircleAvatar(
-            radius: 40,
-            backgroundColor: Colors.blue.shade100,
-            child: const Icon(
-              Icons.person,
-              size: 40,
-              color: Colors.blue,
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          /// NAMA
-          const Text(
-            "Admin Sistem",
+          title: Text(
+            "Profil",
             style: TextStyle(
-              fontSize: 18,
+              color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.bold,
             ),
           ),
 
-          const SizedBox(height: 4),
-
-          /// EMAIL
-          Text(
-            "admin@email.com",
-            style: TextStyle(color: Colors.grey[600]),
+          iconTheme: IconThemeData(
+            color: theme.colorScheme.onSurface,
           ),
+        ),
 
-          const SizedBox(height: 20),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
 
-          /// ROLE
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: Column(
+            children: [
+
+            ///================ PROFILE =================
+
+            Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
+              color: theme.cardColor,
+
+              borderRadius: BorderRadius.circular(24),
+
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(.05),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                ),
+              ],
             ),
-            child: const Text(
-              "Admin",
-              style: TextStyle(
-                color: Colors.blue,
-                fontWeight: FontWeight.bold,
-              ),
+
+            child: Column(
+              children: [
+
+                CircleAvatar(
+                  radius: 45,
+                  backgroundColor: Colors.blue.shade100,
+
+                  child: const Icon(
+                    Icons.person,
+                    size: 50,
+                    color: Color(0xff2563EB),
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+
+                Text(
+                  userName,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+
+                const SizedBox(height: 6),
+
+                Text(
+                  userEmail,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface
+                        .withOpacity(.7),
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 8,
+                  ),
+
+                  decoration: BoxDecoration(
+                    color: const Color(0xff2563EB)
+                        .withOpacity(.12),
+
+                    borderRadius:
+                    BorderRadius.circular(25),
+                  ),
+
+                  child: Text(
+                    userRole.toUpperCase(),
+                    style: const TextStyle(
+                      color: Color(0xff2563EB),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
-          const SizedBox(height: 30),
+          const SizedBox(height: 28),
+          ///================ MENU =================
 
-          /// MENU
-          _menuItem(
-            context,
-            icon: Icons.edit,
+          _menuCard(
+            context: context,
+            icon: Icons.person_outline,
             title: "Edit Profil",
+            subtitle: "Ubah nama dan informasi akun",
             onTap: () {
               Navigator.push(
                 context,
@@ -85,10 +177,13 @@ class ProfilePage extends StatelessWidget {
             },
           ),
 
-          _menuItem(
-            context,
-            icon: Icons.lock,
+          const SizedBox(height: 14),
+
+          _menuCard(
+            context: context,
+            icon: Icons.lock_outline,
             title: "Ganti Password",
+            subtitle: "Perbarui password akun",
             onTap: () {
               Navigator.push(
                 context,
@@ -99,71 +194,259 @@ class ProfilePage extends StatelessWidget {
             },
           ),
 
-          _menuItem(
-            context,
-            icon: Icons.logout,
-            title: "Logout",
-            color: Colors.red,
-            onTap: () {
-              _showLogoutDialog(context);
-            },
+          const SizedBox(height: 14),
+
+          _menuCard(
+            context: context,
+            icon: Icons.notifications_none,
+            title: "Notifikasi",
+            subtitle: "Lihat semua notifikasi",
+            onTap: () {},
           ),
-        ],
-      ),
-    );
-  }
 
-  Widget _menuItem(
-      BuildContext context, {
-        required IconData icon,
-        required String title,
-        Color? color,
-        required VoidCallback onTap,
-      }) {
-    return ListTile(
-      leading: Icon(icon, color: color ?? Colors.black),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: color ?? Colors.black,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: onTap,
-    );
-  }
+          const SizedBox(height: 14),
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Logout"),
-        content: const Text("Yakin ingin keluar?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Batal"),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
+          ///================ DARK MODE =================
 
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const LoginPage(),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 18,
+              vertical: 8,
+            ),
+
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(.05),
+                  blurRadius: 10,
                 ),
-                    (route) => false,
-              );
-            },
-            child: const Text(
-              "Logout",
-              style: TextStyle(color: Colors.red),
+              ],
+            ),
+
+            child: Row(
+              children: [
+
+                const Icon(
+                  Icons.dark_mode,
+                  color: Colors.indigo,
+                ),
+
+                const SizedBox(width: 16),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                    children: [
+
+                      Text(
+                        "Dark Mode",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+
+                      Text(
+                        "Aktifkan tema gelap",
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface
+                              .withOpacity(.7),
+                        ),
+                      ),
+
+                    ],
+                  ),
+                ),
+
+                Switch(
+                  value: darkMode,
+                  activeColor: const Color(0xff2563EB),
+                  onChanged: (value) async {
+                    await themeProvider.toggleTheme(value);
+                  },
+                ),
+
+              ],
             ),
           ),
-        ],
+
+          const SizedBox(height: 14),
+
+          _menuCard(
+            context: context,
+            icon: Icons.info_outline,
+            title: "Tentang Aplikasi",
+            subtitle: "Versi 2.0.0",
+            onTap: () {
+              showAboutDialog(
+                context: context,
+                applicationName:
+                "E-Ticketing Helpdesk",
+                applicationVersion: "1.0.0",
+              );
+            },
+          ),
+
+          const SizedBox(height: 24),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(.08),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.logout,
+                    color: Colors.red,
+                  ),
+                  title: const Text(
+                    "Logout",
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Colors.red,
+                  ),
+                  onTap: () {
+                    _showLogoutDialog(context);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+    );
+  }
+  Widget _menuCard({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(.05),
+              blurRadius: 10,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 22,
+              backgroundColor:
+              const Color(0xff2563EB).withOpacity(.12),
+              child: Icon(
+                icon,
+                color: const Color(0xff2563EB),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface
+                          .withOpacity(.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: theme.colorScheme.onSurface.withOpacity(.6),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+  void _showLogoutDialog(BuildContext context) {
+    final theme = Theme.of(context);
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          backgroundColor: theme.cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            "Logout",
+            style: TextStyle(
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+          content: Text(
+            "Apakah Anda yakin ingin logout?",
+            style: TextStyle(
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("Batal"),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () async {
+                await authService.logout();
+
+                if (!mounted) return;
+
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const LoginPage(),
+                  ),
+                      (route) => false,
+                );
+              },
+              child: const Text("Logout"),
+            ),
+          ],
+        );
+      },
     );
   }
 }

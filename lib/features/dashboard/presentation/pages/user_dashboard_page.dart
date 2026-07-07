@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import '../../../ticket/presentation/pages/user_ticket_detail_page.dart';
+
 import '../../../ticket/presentation/pages/user_create_ticket_page.dart';
+import '../../../ticket/presentation/pages/user_ticket_detail_page.dart';
 
 class UserDashboardPage extends StatefulWidget {
   const UserDashboardPage({super.key});
 
   @override
-  State<UserDashboardPage> createState() => _UserDashboardPageState();
+  State<UserDashboardPage> createState() =>
+      _UserDashboardPageState();
 }
 
-class _UserDashboardPageState extends State<UserDashboardPage> {
+class _UserDashboardPageState
+    extends State<UserDashboardPage> {
+
   final Dio _dio = Dio();
 
   List<Map<String, dynamic>> tickets = [];
+
   bool isLoading = true;
 
   int total = 0;
@@ -30,301 +35,666 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
   Future<void> fetchTickets() async {
     try {
       final response = await _dio.get(
-        'https://jsonplaceholder.typicode.com/posts',
+        "https://jsonplaceholder.typicode.com/posts",
       );
 
       final data = response.data as List;
 
-      final mapped = data.take(10).map<Map<String, dynamic>>((e) {
+      final mapped =
+      data.take(8).map<Map<String, dynamic>>((e) {
+
         final id = e["id"];
 
         String status;
-        if (id % 3 == 0) {
+        Color color;
+        IconData icon;
+
+        if (id % 4 == 0) {
           status = "Open";
-        } else if (id % 3 == 1) {
-          status = "Pending";
-        } else {
+          color = Colors.orange;
+          icon = Icons.schedule;
+        } else if (id % 4 == 1) {
+          status = "Progress";
+          color = Colors.blue;
+          icon = Icons.sync;
+        } else if (id % 4 == 2) {
           status = "Done";
+          color = Colors.green;
+          icon = Icons.check_circle;
+        } else {
+          status = "Rejected";
+          color = Colors.red;
+          icon = Icons.cancel;
         }
 
         return {
           "title": e["title"],
           "status": status,
+          "color": color,
+          "icon": icon,
         };
       }).toList();
 
-      // HITUNG STAT (biar tetep masuk ke UI lama)
       total = mapped.length;
-      open = mapped.where((e) => e["status"] == "Open").length;
-      pending = mapped.where((e) => e["status"] == "Pending").length;
-      done = mapped.where((e) => e["status"] == "Done").length;
+
+      open =
+          mapped.where((e) => e["status"] == "Open").length;
+
+      pending =
+          mapped.where((e) => e["status"] == "Progress").length;
+
+      done =
+          mapped.where((e) => e["status"] == "Done").length;
 
       setState(() {
         tickets = mapped;
         isLoading = false;
       });
-    } catch (e) {
+
+    } catch (_) {
       setState(() {
         isLoading = false;
       });
     }
   }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: SafeArea(
+          child: isLoading
+              ? const Center(
+            child: CircularProgressIndicator(),
+          )
+              : SingleChildScrollView(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+                crossAxisAlignment:
+                CrossAxisAlignment.start,
+                children: [
+
+            /// =========================
+            /// HEADER
+            /// =========================
+
+            Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xff2563EB),
+                  Color(0xff60A5FA),
+                ],
+              ),
+              borderRadius:
+              BorderRadius.circular(24),
+            ),
+            child: Row(
+              children: [
+
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius:
+                    BorderRadius.circular(18),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      "NK",
+                      style: TextStyle(
+                        color: Color(0xff2563EB),
+                        fontWeight:
+                        FontWeight.bold,
+                        fontSize: 22,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 16),
+
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                    children: [
+
+                      Text(
+                        "Selamat Datang 👋",
+                        style: TextStyle(
+                          color: Colors.white70,
+                        ),
+                      ),
+
+                      SizedBox(height: 4),
+
+                      Text(
+                        "Nazlatul Khoiriyah",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight:
+                          FontWeight.bold,
+                          fontSize: 22,
+                        ),
+                      ),
+
+                      SizedBox(height: 4),
+
+                      Text(
+                        "User",
+                        style: TextStyle(
+                          color: Colors.white70,
+                        ),
+                      ),
+
+                    ],
+                  ),
+                ),
+
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(
+                    Icons.notifications,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          Text(
+            "Ringkasan Tiket",
+            style: theme.textTheme.titleLarge
+                ?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          Row(
             children: [
 
-              const SizedBox(height: 10),
-
-              /// 🔥 HEADER (TIDAK DIUBAH)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Selamat datang,",
-                            style: TextStyle(color: Colors.white70)),
-                        SizedBox(height: 4),
-                        Text(
-                          "Nazlatul Khoiriyah",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const CircleAvatar(
-                      backgroundColor: Colors.white,
-                      child: Text("NK"),
-                    )
-                  ],
+              Expanded(
+                child: _statCard(
+                  "$total",
+                  "Total",
+                  Colors.blue,
+                  Icons.confirmation_number,
+                  isDark,
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(width: 12),
 
-              /// 📊 STATS (CUMA VALUE YG DINAMIS)
-              Row(
-                children: [
-                  _statCard("$total", "Total", Colors.blue, isRight: true),
-                  _statCard("$pending", "Menunggu", Colors.orange),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _statCard("$done", "Selesai", Colors.green, isRight: true),
-                  _statCard("$open", "Ditolak", Colors.red),
-                ],
+              Expanded(
+                child: _statCard(
+                  "$pending",
+                  "Progress",
+                  Colors.orange,
+                  Icons.schedule,
+                  isDark,
+                ),
               ),
 
-              const SizedBox(height: 20),
+            ],
+          ),
 
-              /// 🔥 BUAT ADUAN (TIDAK DIUBAH)
-              InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const UserCreateTicketPage(),
-                    ),
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.add, color: Colors.white),
+          const SizedBox(height: 12),
+
+          Row(
+            children: [
+
+              Expanded(
+                child: _statCard(
+                  "$done",
+                  "Done",
+                  Colors.green,
+                  Icons.check_circle,
+                  isDark,
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: _statCard(
+                  "$open",
+                  "Open",
+                  Colors.red,
+                  Icons.warning,
+                  isDark,
+                ),
+              ),
+
+            ],
+          ),
+
+          const SizedBox(height: 26),
+
+          Text(
+            "Quick Action",
+            style: theme.textTheme.titleMedium
+                ?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          Row(
+            children: [
+
+              Expanded(
+                child: _quickAction(
+                  icon: Icons.add_circle,
+                  title: "Buat Aduan",
+                  color: Colors.blue,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                        const UserCreateTicketPage(),
                       ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: _quickAction(
+                  icon: Icons.history,
+                  title: "Riwayat",
+                  color: Colors.green,
+                  onTap: () {},
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: _quickAction(
+                  icon: Icons.support_agent,
+                  title: "Helpdesk",
+                  color: Colors.orange,
+                  onTap: () {},
+                ),
+              ),
+
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius:
+              BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: isDark
+                      ? Colors.transparent
+                      : Colors.black.withOpacity(.05),
+                  blurRadius: 10,
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment:
+              CrossAxisAlignment.start,
+              children: [
+
+                Text(
+                  "Progress Ticket",
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(
+                    fontWeight:
+                    FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                ClipRRect(
+                  borderRadius:
+                  BorderRadius.circular(20),
+                  child:
+                  const LinearProgressIndicator(
+                    value: .72,
+                    minHeight: 10,
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                Text(
+                  "72% tiket telah diproses",
+                  style: TextStyle(
+                    color: theme.colorScheme
+                        .onSurface
+                        .withOpacity(.7),
+                  ),
+                ),
+
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          Text(
+            "Ticket Terbaru",
+            style: theme.textTheme.titleMedium
+                ?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 14),
+                  ...tickets.map((e) {
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => UserTicketDetailPage(
+                              data: {
+                                "title": e["title"],
+                                "status": e["status"],
+                                "date": "20 Apr 2026",
+                                "category": "IT Support",
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 14),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: theme.cardColor,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isDark
+                                  ? Colors.transparent
+                                  : Colors.black.withOpacity(.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
                           children: [
-                            Text(
-                              "Buat Aduan Baru",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: (e["color"] as Color)
+                                    .withOpacity(.12),
+                                borderRadius:
+                                BorderRadius.circular(16),
+                              ),
+                              child: Icon(
+                                e["icon"] as IconData,
+                                color: e["color"] as Color,
+                                size: 28,
                               ),
                             ),
-                            Text(
-                              "Laporkan masalah kamu ke helpdesk",
-                              style: TextStyle(
-                                  color: Colors.white70, fontSize: 12),
+
+                            const SizedBox(width: 16),
+
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                                children: [
+
+                                  Text(
+                                    e["title"],
+                                    maxLines: 2,
+                                    overflow:
+                                    TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontWeight:
+                                      FontWeight.bold,
+                                      color: theme.colorScheme
+                                          .onSurface,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 10),
+
+                                  Row(
+                                    children: [
+
+                                      Container(
+                                        padding:
+                                        const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 5,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: (e["color"]
+                                          as Color)
+                                              .withOpacity(.12),
+                                          borderRadius:
+                                          BorderRadius.circular(
+                                              30),
+                                        ),
+                                        child: Text(
+                                          e["status"],
+                                          style: TextStyle(
+                                            color: e["color"]
+                                            as Color,
+                                            fontWeight:
+                                            FontWeight.bold,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ),
+
+                                      const SizedBox(width: 10),
+
+                                      Text(
+                                        "20 Apr 2026",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: theme
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(.6),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 16,
+                              color: theme.colorScheme.onSurface
+                                  .withOpacity(.5),
                             ),
                           ],
                         ),
                       ),
-                      const Icon(Icons.arrow_forward_ios,
-                          color: Colors.white, size: 16)
-                    ],
+                    );
+                  }).toList(),
+
+                  const SizedBox(height: 24),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.list_alt),
+                      label: const Text(
+                        "Lihat Semua Ticket",
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                        const Color(0xff2563EB),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                          BorderRadius.circular(16),
+                        ),
+                      ),
+                      onPressed: () {},
+                    ),
                   ),
-                ),
+
+                  const SizedBox(height: 30),
+
+                ],
+            ),
+          ),
+        ),
+        );
+    }
+  /// =========================
+  /// STAT CARD
+  /// =========================
+
+  Widget _statCard(
+      String value,
+      String label,
+      Color color,
+      IconData icon,
+      bool isDark,
+      ) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.transparent
+                : Colors.black.withOpacity(.05),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: color.withOpacity(.12),
+            child: Icon(
+              icon,
+              color: color,
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+
+          const SizedBox(height: 5),
+
+          Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withOpacity(.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// =========================
+  /// QUICK ACTION
+  /// =========================
+
+  Widget _quickAction({
+    required IconData icon,
+    required String title,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final isDark =
+        theme.brightness == Brightness.dark;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            vertical: 18,
+          ),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.transparent
+                    : Colors.black.withOpacity(.05),
+                blurRadius: 10,
               ),
+            ],
+          ),
+          child: Column(
+            children: [
 
-              const SizedBox(height: 20),
-
-              const Text(
-                "Tiket Terbaru",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+              CircleAvatar(
+                radius: 22,
+                backgroundColor:
+                color.withOpacity(.12),
+                child: Icon(
+                  icon,
+                  color: color,
                 ),
               ),
 
               const SizedBox(height: 10),
 
-              /// LIST (DINAMIS)
-              Expanded(
-                child: isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : ListView(
-                  children: tickets
-                      .map((e) => _ticketItem(
-                    context,
-                    title: e["title"],
-                    status: e["status"],
-                  ))
-                      .toList(),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
                 ),
-              )
+              ),
+
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  /// STAT CARD (TIDAK DIUBAH)
-  Widget _statCard(String value, String label, Color color,
-      {bool isRight = false}) {
-    return Expanded(
-      child: Container(
-        margin: EdgeInsets.only(right: isRight ? 10 : 0),
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: color,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 12),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// ITEM TIKET (TIDAK DIUBAH)
-  Widget _ticketItem(
-      BuildContext context, {
-        required String title,
-        required String status,
-      }) {
-    Color color;
-
-    switch (status) {
-      case "Open":
-        color = Colors.orange;
-        break;
-      case "Pending":
-        color = Colors.blue;
-        break;
-      case "Done":
-        color = Colors.green;
-        break;
-      default:
-        color = Colors.grey;
-    }
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => UserTicketDetailPage(
-              data: {
-                "title": title,
-                "status": status,
-                "date": "20 Apr 2026",
-                "category": "IT Support",
-              },
-            ),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                status,
-                style: TextStyle(color: color, fontSize: 12),
-              ),
-            )
-          ],
         ),
       ),
     );

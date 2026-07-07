@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+
 import 'user_ticket_detail_page.dart';
 
 class UserTicketPage extends StatefulWidget {
@@ -10,48 +11,69 @@ class UserTicketPage extends StatefulWidget {
 }
 
 class _UserTicketPageState extends State<UserTicketPage> {
-  String selectedFilter = "All";
-
   final Dio _dio = Dio();
+
+  final TextEditingController _searchController =
+  TextEditingController();
+
   List<Map<String, String>> tickets = [];
+  List<Map<String, String>> filteredTickets = [];
+
   bool isLoading = true;
+
+  String selectedFilter = "All";
 
   @override
   void initState() {
     super.initState();
+
     fetchTickets();
+
+    _searchController.addListener(_searchTicket);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> fetchTickets() async {
     try {
       final response = await _dio.get(
-        'https://jsonplaceholder.typicode.com/posts',
+        "https://jsonplaceholder.typicode.com/posts",
       );
 
       final data = response.data as List;
 
-      final mapped = data.take(15).map<Map<String, String>>((e) {
+      tickets = data.take(20).map<Map<String, String>>((e) {
         final id = e["id"];
 
         String status;
+
         if (id % 3 == 0) {
           status = "Open";
         } else if (id % 3 == 1) {
-          status = "Pending";
+          status = "Progress";
         } else {
           status = "Done";
         }
 
         return {
+          "ticket": "TK-${id.toString().padLeft(3, "0")}",
           "title": e["title"],
+          "description": e["body"],
           "status": status,
-          "date": "20 Apr 2026",
-          "category": id % 2 == 0 ? "Jaringan" : "Hardware",
+          "category": id % 2 == 0
+              ? "Hardware"
+              : "Jaringan",
+          "date": "05 Juli 2026",
         };
       }).toList();
 
+      filteredTickets = List.from(tickets);
+
       setState(() {
-        tickets = mapped;
         isLoading = false;
       });
     } catch (e) {
@@ -61,236 +83,514 @@ class _UserTicketPageState extends State<UserTicketPage> {
     }
   }
 
+  void _changeFilter(String value) {
+    selectedFilter = value;
+    _searchTicket();
+  }
+
+  void _searchTicket() {
+    final keyword =
+    _searchController.text.toLowerCase();
+
+    List<Map<String, String>> result = tickets;
+
+    if (selectedFilter != "All") {
+      result = result
+          .where(
+            (e) => e["status"] == selectedFilter,
+      )
+          .toList();
+    }
+
+    if (keyword.isNotEmpty) {
+      result = result.where((e) {
+        return e["title"]!
+            .toLowerCase()
+            .contains(keyword) ||
+            e["ticket"]!
+                .toLowerCase()
+                .contains(keyword) ||
+            e["category"]!
+                .toLowerCase()
+                .contains(keyword);
+      }).toList();
+    }
+
+    setState(() {
+      filteredTickets = result;
+    });
+  }
   @override
   Widget build(BuildContext context) {
-    final filtered = selectedFilter == "All"
-        ? tickets
-        : tickets.where((t) => t["status"] == selectedFilter).toList();
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+        backgroundColor:
+        isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FB),
 
-      body: Column(
-        children: [
+        body: SafeArea(
+            child: Column(
+              children: [
 
-          /// 🔥 HEADER (TIDAK DIUBAH)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(16, 50, 16, 20),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF4F8CFF), Color(0xFF2563EB)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+              // ==========================
+              // HEADER
+              // ==========================
+
+              Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(
+                20,
+                20,
+                20,
+                24,
               ),
-              borderRadius: BorderRadius.vertical(
-                bottom: Radius.circular(24),
-              ),
-            ),
-            child: const Center(
-              child: Text(
-                "Tiket Saya",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF4F8CFF),
+                    Color(0xFF2563EB),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(28),
                 ),
               ),
-            ),
-          ),
-
-          /// CONTENT
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment:
+                CrossAxisAlignment.start,
                 children: [
 
-                  /// SEARCH (TIDAK DIUBAH)
-                  Container(
-                    decoration: BoxDecoration(
+                  const Text(
+                    "Tiket Saya",
+                    style: TextStyle(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 8,
-                        )
-                      ],
-                    ),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: "Cari tiket...",
-                        prefixIcon: const Icon(Icons.search),
-                        border: InputBorder.none,
-                        contentPadding:
-                        const EdgeInsets.symmetric(vertical: 14),
-                      ),
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 6),
 
-                  /// FILTER (TIDAK DIUBAH)
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
+                  const Text(
+                    "Lihat seluruh tiket yang pernah kamu buat",
+                    style: TextStyle(
+                      color: Colors.white70,
+                    ),
+                  ),
+
+                  const SizedBox(height: 22),
+
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(.15),
+                      borderRadius:
+                      BorderRadius.circular(18),
+                    ),
                     child: Row(
                       children: [
-                        _filterChip("All"),
-                        _filterChip("Open"),
-                        _filterChip("Pending"),
-                        _filterChip("Done"),
+
+                        Container(
+                          width: 54,
+                          height: 54,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.confirmation_number,
+                            color: Color(0xFF2563EB),
+                          ),
+                        ),
+
+                        const SizedBox(width: 16),
+
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                            children: [
+
+                              const Text(
+                                "Total Tiket",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                ),
+                              ),
+
+                              const SizedBox(height: 5),
+
+                              Text(
+                                "${tickets.length}",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight:
+                                  FontWeight.bold,
+                                  fontSize: 28,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.white70,
+                          size: 18,
+                        ),
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 12),
-
-                  /// LIST (DINAMIS)
-                  Expanded(
-                    child: isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : ListView(
-                      children:
-                      filtered.map((e) => _ticketCard(e)).toList(),
-                    ),
-                  )
                 ],
               ),
             ),
-          )
-        ],
-      ),
+
+            Expanded(
+                child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                        children: [
+                          // ==========================
+                          // SEARCH
+                          // ==========================
+
+                          Container(
+                            decoration: BoxDecoration(
+                              color: theme.cardColor,
+                              borderRadius: BorderRadius.circular(18),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: isDark
+                                      ? Colors.transparent
+                                      : Colors.black.withOpacity(.05),
+                                  blurRadius: 10,
+                                ),
+                              ],
+                            ),
+                            child: TextField(
+                              controller: _searchController,
+                              decoration: InputDecoration(
+                                hintText: "Cari tiket...",
+                                prefixIcon: const Icon(Icons.search),
+                                border: InputBorder.none,
+                                contentPadding:
+                                const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 18),
+
+                          // ==========================
+                          // FILTER
+                          // ==========================
+
+                          SizedBox(
+                            height: 42,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              children: [
+
+                                _filterChip("All"),
+
+                                const SizedBox(width: 8),
+
+                                _filterChip("Open"),
+
+                                const SizedBox(width: 8),
+
+                                _filterChip("Progress"),
+
+                                const SizedBox(width: 8),
+
+                                _filterChip("Done"),
+
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 18),
+
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Daftar Tiket",
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 14),
+
+                          Expanded(
+                            child: isLoading
+                                ? const Center(
+                              child:
+                              CircularProgressIndicator(),
+                            )
+                                : filteredTickets.isEmpty
+                                ? const Center(
+                              child: Text(
+                                "Belum ada tiket.",
+                              ),
+                            )
+                                : ListView.builder(
+                              itemCount:
+                              filteredTickets.length,
+                              itemBuilder:
+                                  (context, index) {
+                                return _ticketCard(
+                                  filteredTickets[
+                                  index],
+                                );
+                              },
+                            ),
+                          ),
+
+                        ],
+                    ),
+                ),
+            ),
+              ],
+            ),
+        ),
     );
   }
+  // ==========================
+  // FILTER CHIP
+  // ==========================
 
   Widget _filterChip(String label) {
-    final isActive = selectedFilter == label;
+    final theme = Theme.of(context);
+    final bool active = selectedFilter == label;
 
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: isActive,
-        selectedColor: Colors.blue.withOpacity(0.15),
-        labelStyle: TextStyle(
-          color: isActive ? Colors.blue : Colors.black,
-          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-        ),
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        onSelected: (_) {
-          setState(() {
-            selectedFilter = label;
-          });
-        },
+    return ChoiceChip(
+      label: Text(label),
+      selected: active,
+      showCheckmark: false,
+      backgroundColor: theme.cardColor,
+      selectedColor: const Color(0xFF2563EB).withOpacity(.15),
+      labelStyle: TextStyle(
+        color: active
+            ? const Color(0xFF2563EB)
+            : theme.colorScheme.onSurface,
+        fontWeight:
+        active ? FontWeight.bold : FontWeight.w500,
       ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(30),
+      ),
+      onSelected: (_) => _changeFilter(label),
     );
   }
 
-  Widget _ticketCard(Map<String, String> data) {
-    final status = data["status"] ?? "-";
-    final category = data["category"] ?? "-";
+  // ==========================
+  // TICKET CARD
+  // ==========================
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-          )
-        ],
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => UserTicketDetailPage(data: data),
+  Widget _ticketCard(Map<String, String> data) {
+    final theme = Theme.of(context);
+
+    final status = data["status"] ?? "";
+    final category = data["category"] ?? "";
+
+    IconData icon =
+    category == "Hardware"
+        ? Icons.computer
+        : Icons.wifi;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                UserTicketDetailPage(data: data),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: theme.brightness ==
+                  Brightness.dark
+                  ? Colors.transparent
+                  : Colors.black.withOpacity(.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          );
-        },
+          ],
+        ),
         child: Row(
           children: [
+
             Container(
-              width: 4,
-              height: 50,
+              width: 54,
+              height: 54,
               decoration: BoxDecoration(
+                color:
+                _statusColor(status).withOpacity(.12),
+                borderRadius:
+                BorderRadius.circular(16),
+              ),
+              child: Icon(
+                icon,
                 color: _statusColor(status),
-                borderRadius: BorderRadius.circular(10),
               ),
             ),
 
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
 
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                CrossAxisAlignment.start,
                 children: [
+
+                  Text(
+                    data["ticket"] ?? "-",
+                    style: const TextStyle(
+                      color: Color(0xFF2563EB),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+
+                  const SizedBox(height: 5),
+
                   Text(
                     data["title"] ?? "-",
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color:
+                      theme.colorScheme.onSurface,
+                    ),
                   ),
-                  const SizedBox(height: 6),
+
+                  const SizedBox(height: 10),
+
                   Row(
                     children: [
+
                       _statusBadge(status),
+
                       const SizedBox(width: 8),
+
+                      Icon(
+                        Icons.category,
+                        size: 14,
+                        color: Colors.grey.shade600,
+                      ),
+
+                      const SizedBox(width: 4),
+
                       Text(
                         category,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey,
+                          color: theme
+                              .colorScheme.onSurface
+                              .withOpacity(.65),
                         ),
                       ),
                     ],
-                  )
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Row(
+                    children: [
+
+                      Icon(
+                        Icons.calendar_today,
+                        size: 14,
+                        color: Colors.grey.shade600,
+                      ),
+
+                      const SizedBox(width: 5),
+
+                      Text(
+                        data["date"] ?? "",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme
+                              .colorScheme.onSurface
+                              .withOpacity(.65),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
 
-            const Icon(Icons.arrow_forward_ios, size: 16)
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: theme.colorScheme.onSurface
+                  .withOpacity(.45),
+            ),
           ],
         ),
       ),
     );
   }
 
+  // ==========================
+  // STATUS COLOR
+  // ==========================
+
   Color _statusColor(String status) {
     switch (status) {
       case "Open":
         return Colors.orange;
-      case "Pending":
+
+      case "Progress":
         return Colors.blue;
+
       case "Done":
         return Colors.green;
+
       default:
         return Colors.grey;
     }
   }
 
+  // ==========================
+  // STATUS BADGE
+  // ==========================
+
   Widget _statusBadge(String status) {
     final color = _statusColor(status);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 5,
+      ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(12),
+        color: color.withOpacity(.12),
+        borderRadius: BorderRadius.circular(30),
       ),
       child: Text(
         status,
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.bold,
-          fontSize: 12,
+          fontSize: 11,
         ),
       ),
     );

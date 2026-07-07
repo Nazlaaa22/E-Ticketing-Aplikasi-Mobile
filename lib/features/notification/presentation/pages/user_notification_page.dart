@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+
 import '../../../ticket/presentation/pages/user_ticket_detail_page.dart';
 
 class UserNotificationPage extends StatefulWidget {
   const UserNotificationPage({super.key});
 
   @override
-  State<UserNotificationPage> createState() => _UserNotificationPageState();
+  State<UserNotificationPage> createState() =>
+      _UserNotificationPageState();
 }
 
-class _UserNotificationPageState extends State<UserNotificationPage> {
+class _UserNotificationPageState
+    extends State<UserNotificationPage> {
+
   final Dio _dio = Dio();
 
   List<Map<String, String>> notifications = [];
+
   bool isLoading = true;
+
+  int unread = 0;
 
   @override
   void initState() {
@@ -23,13 +30,15 @@ class _UserNotificationPageState extends State<UserNotificationPage> {
 
   Future<void> fetchNotifications() async {
     try {
+
       final response = await _dio.get(
-        'https://jsonplaceholder.typicode.com/posts',
+        "https://jsonplaceholder.typicode.com/posts",
       );
 
       final data = response.data as List;
 
-      final mapped = data.take(10).map<Map<String, String>>((e) {
+      notifications = data.take(12).map<Map<String, String>>((e) {
+
         final id = e["id"];
 
         String type;
@@ -40,146 +49,379 @@ class _UserNotificationPageState extends State<UserNotificationPage> {
           status = "Open";
         } else if (id % 3 == 1) {
           type = "update";
-          status = "Pending";
+          status = "Progress";
         } else {
-          type = "comment";
+          type = "reply";
           status = "Done";
         }
 
         return {
           "title": _titleByType(type),
-          "desc": e["title"],
-          "time": "${id * 2} menit lalu",
-          "type": type,
-          "ticket": "TKT-00$id",
+          "message": e["title"],
+          "time": "${id * 3} menit lalu",
+          "ticket": "TK-${id.toString().padLeft(3, "0")}",
           "status": status,
+          "type": type,
         };
+
       }).toList();
 
-      setState(() {
-        notifications = mapped;
-        isLoading = false;
-      });
-    } catch (e) {
+      unread = notifications.length ~/ 3;
+
       setState(() {
         isLoading = false;
       });
+
+    } catch (_) {
+
+      setState(() {
+        isLoading = false;
+      });
+
     }
   }
 
   String _titleByType(String type) {
+
     switch (type) {
+
       case "create":
-        return "Tiket berhasil dibuat";
+        return "Tiket Berhasil Dibuat";
+
       case "update":
-        return "Status tiket diperbarui";
-      case "comment":
-        return "Balasan dari helpdesk";
+        return "Status Tiket Diperbarui";
+
+      case "reply":
+        return "Balasan dari Helpdesk";
+
       default:
         return "Notifikasi";
-    }
-  }
 
+    }
+
+  }
   @override
   Widget build(BuildContext context) {
+
+    final theme = Theme.of(context);
+    final isDark =
+        theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+        backgroundColor: theme.scaffoldBackgroundColor,
 
-      body: Column(
-        children: [
+        body: SafeArea(
+            child: Column(
+              children: [
 
-          /// 🔥 HEADER (TIDAK DIUBAH)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(16, 50, 16, 20),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF4F8CFF), Color(0xFF2563EB)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+              /// ==========================
+              /// HEADER
+              /// ==========================
+
+              Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(
+                20,
+                20,
+                20,
+                24,
               ),
-              borderRadius: BorderRadius.vertical(
-                bottom: Radius.circular(24),
-              ),
-            ),
-            child: const Center(
-              child: Text(
-                "Notifikasi",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xff2563EB),
+                    Color(0xff60A5FA),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(30),
                 ),
               ),
-            ),
-          ),
+              child: Column(
+                crossAxisAlignment:
+                CrossAxisAlignment.start,
+                children: [
 
-          /// 🔥 LIST
-          Expanded(
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: notifications.length,
-              itemBuilder: (context, index) {
-                final notif = notifications[index];
+                  const Row(
+                    children: [
 
-                return _notifCard(
-                  context,
-                  title: notif["title"]!,
-                  desc: notif["desc"]!,
-                  time: notif["time"]!,
-                  type: notif["type"]!,
-                  ticketId: notif["ticket"]!,
-                  status: notif["status"]!,
-                );
-              },
+                      CircleAvatar(
+                        radius: 22,
+                        backgroundColor: Colors.white,
+                        child: Icon(
+                          Icons.notifications,
+                          color: Color(0xff2563EB),
+                        ),
+                      ),
+
+                      SizedBox(width: 14),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                          children: [
+
+                            Text(
+                              "Notifikasi",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight:
+                                FontWeight.bold,
+                              ),
+                            ),
+
+                            SizedBox(height: 4),
+
+                            Text(
+                              "Semua aktivitas tiket kamu",
+                              style: TextStyle(
+                                color: Colors.white70,
+                              ),
+                            ),
+
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  Row(
+                    children: [
+
+                      Expanded(
+                        child: Container(
+                          padding:
+                          const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white
+                                .withOpacity(.15),
+                            borderRadius:
+                            BorderRadius.circular(
+                                18),
+                          ),
+                          child: Column(
+                            crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                            children: [
+
+                              const Text(
+                                "Total",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                ),
+                              ),
+
+                              const SizedBox(height: 6),
+
+                              Text(
+                                "${notifications.length}",
+                                style:
+                                const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 26,
+                                  fontWeight:
+                                  FontWeight.bold,
+                                ),
+                              ),
+
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 12),
+
+                      Expanded(
+                        child: Container(
+                          padding:
+                          const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white
+                                .withOpacity(.15),
+                            borderRadius:
+                            BorderRadius.circular(
+                                18),
+                          ),
+                          child: Column(
+                            crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                            children: [
+
+                              const Text(
+                                "Belum Dibaca",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                ),
+                              ),
+
+                              const SizedBox(height: 6),
+
+                              Text(
+                                "$unread",
+                                style:
+                                const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 26,
+                                  fontWeight:
+                                  FontWeight.bold,
+                                ),
+                              ),
+
+                            ],
+                          ),
+                        ),
+                      ),
+
+                    ],
+                  ),
+
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+
+            Expanded(
+                child: Padding(
+                    padding:
+                    const EdgeInsets.all(16),
+                    child: Column(
+                        children: [
+                          /// ==========================
+                          /// SEARCH
+                          /// ==========================
+
+                          Container(
+                            decoration: BoxDecoration(
+                              color: theme.cardColor,
+                              borderRadius: BorderRadius.circular(18),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: isDark
+                                      ? Colors.transparent
+                                      : Colors.black.withOpacity(.05),
+                                  blurRadius: 10,
+                                ),
+                              ],
+                            ),
+                            child: TextField(
+                              decoration: InputDecoration(
+                                hintText: "Cari notifikasi...",
+                                prefixIcon: Icon(
+                                  Icons.search,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding:
+                                const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 18),
+
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Aktivitas Terbaru",
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 14),
+
+                          Expanded(
+                            child: isLoading
+                                ? const Center(
+                              child:
+                              CircularProgressIndicator(),
+                            )
+                                : notifications.isEmpty
+                                ? Center(
+                              child: Column(
+                                mainAxisAlignment:
+                                MainAxisAlignment.center,
+                                children: [
+
+                                  Icon(
+                                    Icons.notifications_off_outlined,
+                                    size: 70,
+                                    color: Colors.grey.shade400,
+                                  ),
+
+                                  const SizedBox(height: 12),
+
+                                  Text(
+                                    "Belum ada notifikasi",
+                                    style: TextStyle(
+                                      color: theme
+                                          .colorScheme
+                                          .onSurface
+                                          .withOpacity(.6),
+                                    ),
+                                  ),
+
+                                ],
+                              ),
+                            )
+                                : ListView.builder(
+                              itemCount:
+                              notifications.length,
+                              itemBuilder:
+                                  (context, index) {
+                                final notif =
+                                notifications[index];
+
+                                return _notificationCard(
+                                  title:
+                                  notif["title"]!,
+                                  message:
+                                  notif["message"]!,
+                                  time:
+                                  notif["time"]!,
+                                  ticket:
+                                  notif["ticket"]!,
+                                  status:
+                                  notif["status"]!,
+                                  type:
+                                  notif["type"]!,
+                                );
+                              },
+                            ),
+                          ),
+
+                        ],
+                    ),
+                ),
+            ),
+
+              ],
+            ),
+        ),
     );
   }
+  /// ==========================
+  /// NOTIFICATION CARD
+  /// ==========================
 
-  IconData _getIcon(String type) {
-    switch (type) {
-      case "create":
-        return Icons.add_circle;
-      case "update":
-        return Icons.sync;
-      case "comment":
-        return Icons.chat;
-      case "done":
-        return Icons.check_circle;
-      default:
-        return Icons.notifications;
-    }
-  }
+  Widget _notificationCard({
+    required String title,
+    required String message,
+    required String time,
+    required String ticket,
+    required String status,
+    required String type,
+  }) {
+    final theme = Theme.of(context);
 
-  Color _getColor(String type) {
-    switch (type) {
-      case "create":
-        return Colors.blue;
-      case "update":
-        return Colors.orange;
-      case "comment":
-        return Colors.purple;
-      case "done":
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  Widget _notifCard(
-      BuildContext context, {
-        required String title,
-        required String desc,
-        required String time,
-        required String type,
-        required String ticketId,
-        required String status,
-      }) {
     final color = _getColor(type);
 
     return GestureDetector(
@@ -189,77 +431,209 @@ class _UserNotificationPageState extends State<UserNotificationPage> {
           MaterialPageRoute(
             builder: (_) => UserTicketDetailPage(
               data: {
-                "title": desc,
+                "title": message,
                 "status": status,
-                "date": "20 Apr 2026",
-                "category": "Jaringan",
+                "date": "05 Juli 2026",
+                "category": "Hardware",
               },
             ),
           ),
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(14),
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-            )
+              color: theme.brightness == Brightness.dark
+                  ? Colors.transparent
+                  : Colors.black.withOpacity(.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
           ],
         ),
         child: Row(
           children: [
 
-            /// ICON
             Container(
-              padding: const EdgeInsets.all(10),
+              width: 54,
+              height: 54,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
-                shape: BoxShape.circle,
+                color: color.withOpacity(.12),
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(_getIcon(type), color: color),
+              child: Icon(
+                _getIcon(type),
+                color: color,
+              ),
             ),
 
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
 
-            /// TEXT
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                CrossAxisAlignment.start,
                 children: [
+
+                  Text(
+                    ticket,
+                    style: const TextStyle(
+                      color: Color(0xff2563EB),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    desc,
                     style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 4),
+
+                  const SizedBox(height: 6),
+
                   Text(
-                    time,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey,
+                    message,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: theme.colorScheme.onSurface
+                          .withOpacity(.65),
                     ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Row(
+                    children: [
+
+                      _statusBadge(status),
+
+                      const SizedBox(width: 10),
+
+                      Icon(
+                        Icons.access_time,
+                        size: 14,
+                        color: Colors.grey.shade600,
+                      ),
+
+                      const SizedBox(width: 4),
+
+                      Text(
+                        time,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurface
+                              .withOpacity(.65),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
 
-            const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey)
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: theme.colorScheme.onSurface
+                  .withOpacity(.45),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// ==========================
+  /// ICON
+  /// ==========================
+
+  IconData _getIcon(String type) {
+    switch (type) {
+      case "create":
+        return Icons.add_circle;
+
+      case "update":
+        return Icons.sync;
+
+      case "reply":
+        return Icons.chat_bubble;
+
+      default:
+        return Icons.notifications;
+    }
+  }
+
+  /// ==========================
+  /// COLOR
+  /// ==========================
+
+  Color _getColor(String type) {
+    switch (type) {
+      case "create":
+        return Colors.blue;
+
+      case "update":
+        return Colors.orange;
+
+      case "reply":
+        return Colors.green;
+
+      default:
+        return Colors.grey;
+    }
+  }
+
+  /// ==========================
+  /// STATUS BADGE
+  /// ==========================
+
+  Widget _statusBadge(String status) {
+    Color color;
+
+    switch (status) {
+      case "Open":
+        color = Colors.orange;
+        break;
+
+      case "Progress":
+        color = Colors.blue;
+        break;
+
+      case "Done":
+        color = Colors.green;
+        break;
+
+      default:
+        color = Colors.grey;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 5,
+      ),
+      decoration: BoxDecoration(
+        color: color.withOpacity(.12),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 11,
         ),
       ),
     );

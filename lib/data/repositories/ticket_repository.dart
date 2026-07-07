@@ -3,15 +3,13 @@ import 'package:dio/dio.dart';
 class TicketRepository {
   final Dio _dio = Dio();
 
-  Future<List<dynamic>> getTickets() async {
-    try {
-      final response = await _dio.get(
-        'https://jsonplaceholder.typicode.com/posts',
-      );
+  Future<List<double>> getWeeklyChart() async {
+    final response = await _dio.get("/dashboard/weekly");
 
-      return response.data;
-    } catch (e) {
-      throw Exception('Gagal mengambil data tiket: $e');
-    }
+    final List data = response.data;
+
+    return data.map<double>((item) {
+      return (item["count"] as num).toDouble();
+    }).toList();
   }
 }

@@ -11,8 +11,12 @@ import 'package:e_ticketing_helpdesk/features/dashboard/presentation/pages/user_
 import 'package:e_ticketing_helpdesk/features/ticket/presentation/pages/user_ticket_page.dart';
 
 // SHARED
-import 'package:e_ticketing_helpdesk/features/notification/presentation/pages/notification_page.dart';
+import 'package:e_ticketing_helpdesk/features/notification/presentation/pages/admin_notification_page.dart';
 import 'package:e_ticketing_helpdesk/features/profile/presentation/pages/profile_page.dart';
+import 'package:e_ticketing_helpdesk/features/notification/presentation/pages/user_notification_page.dart';
+
+import 'package:provider/provider.dart';
+import '../../../../core/theme/theme_provider.dart';
 
 class HomePage extends StatefulWidget {
   final String role;
@@ -45,7 +49,7 @@ class _HomePageState extends State<HomePage> {
       _pages = [
         const UserDashboardPage(),
         const UserTicketPage(),
-        const NotificationPage(),
+        const UserNotificationPage(),
         const ProfilePage(),
       ];
     }
@@ -53,7 +57,12 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Provider.of<ThemeProvider>(context);
     return Scaffold(
+      backgroundColor:
+      theme.isDark
+          ? const Color(0xff121212)
+          : const Color(0xffF5F7FB),
       body: _pages[_currentIndex],
 
       /// 🔥 ADMIN NAV (5 MENU)
@@ -67,8 +76,10 @@ class _HomePageState extends State<HomePage> {
   Widget _adminBottomNav() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Provider.of<ThemeProvider>(context).isDark
+            ? const Color(0xff1E1E1E)
+            : Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Row(
@@ -89,8 +100,17 @@ class _HomePageState extends State<HomePage> {
     return BottomNavigationBar(
       currentIndex: _currentIndex,
       onTap: (i) => setState(() => _currentIndex = i),
-      selectedItemColor: Colors.blue,
-      unselectedItemColor: Colors.grey,
+      backgroundColor:
+      Provider.of<ThemeProvider>(context).isDark
+          ? const Color(0xff1E1E1E)
+          : Colors.white,
+
+      selectedItemColor: const Color(0xff2563EB),
+
+      unselectedItemColor:
+      Provider.of<ThemeProvider>(context).isDark
+          ? Colors.white70
+          : Colors.grey,
       type: BottomNavigationBarType.fixed,
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
@@ -114,14 +134,22 @@ class _HomePageState extends State<HomePage> {
         children: [
           Icon(
             icon,
-            color: isActive ? Colors.blue : Colors.grey,
+            color: isActive
+                ? const Color(0xff2563EB)
+                : Provider.of<ThemeProvider>(context).isDark
+                ? Colors.white70
+                : Colors.grey,
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
               fontSize: 11,
-              color: isActive ? Colors.blue : Colors.grey,
+              color: isActive
+                  ? const Color(0xff2563EB)
+                  : Provider.of<ThemeProvider>(context).isDark
+                  ? Colors.white70
+                  : Colors.grey,
             ),
           )
         ],

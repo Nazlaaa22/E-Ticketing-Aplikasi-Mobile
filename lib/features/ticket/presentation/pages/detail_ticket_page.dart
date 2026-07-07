@@ -1,9 +1,9 @@
-import 'package:e_ticketing_helpdesk/features/ticket/presentation/pages/assign_ticket_page.dart';
 import 'package:flutter/material.dart';
+import '../../data/repositories/ticket_repository.dart';
 import 'assign_ticket_page.dart';
 
 class DetailTicketPage extends StatefulWidget {
-  final String id; // ✅ TAMBAH
+  final String id;
   final String title;
   final String desc;
   final String status;
@@ -17,23 +17,14 @@ class DetailTicketPage extends StatefulWidget {
   });
 
   @override
-  State<DetailTicketPage> createState() => _DetailTicketPageState();
+  State<DetailTicketPage> createState() =>
+      _DetailTicketPageState();
 }
 
-class _DetailTicketPageState extends State<DetailTicketPage> {
-  late String _status;
-  final TextEditingController _commentController = TextEditingController();
+class _DetailTicketPageState
+    extends State<DetailTicketPage> {
 
-  final List<Map<String, String>> _comments = [
-    {
-      "sender": "Helpdesk - Budi",
-      "message": "Sedang kami cek, mohon tunggu."
-    },
-    {
-      "sender": "User",
-      "message": "Baik, terima kasih."
-    }
-  ];
+  late String _status;
 
   @override
   void initState() {
@@ -41,89 +32,184 @@ class _DetailTicketPageState extends State<DetailTicketPage> {
     _status = widget.status;
   }
 
-  void _addComment() {
-    if (_commentController.text.isEmpty) return;
+  Future<void> _updateStatus(String status) async {
+    try {
+      final repo = TicketRepository();
 
-    setState(() {
-      _comments.add({
-        "sender": "Admin",
-        "message": _commentController.text
+      await repo.updateStatus(
+        id: int.parse(
+          widget.id.replaceAll("TKT-", ""),
+        ),
+        status: status,
+      );
+
+      setState(() {
+        _status = status;
       });
-    });
 
-    _commentController.clear();
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.green,
+          content: Text(
+            "Status berhasil diubah menjadi $status",
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text(e.toString()),
+        ),
+      );
+    }
   }
 
-  void _updateStatus(String newStatus) {
-    setState(() {
-      _status = newStatus;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Status diubah ke $newStatus")),
-    );
-  }
-
-  /// 🔥 BALIK KE PAGE SEBELUMNYA DENGAN DATA BARU
-  void _saveAndBack() {
-    Navigator.pop(context, {
-      "title": widget.title,
-      "desc": widget.desc,
-      "status": _status,
-    });
+  void _save() {
+    Navigator.pop(context, true);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+        backgroundColor: const Color(0xffF5F7FB),
 
-      appBar: AppBar(
-        title: const Text("Detail Tiket"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.check),
-            onPressed: _saveAndBack, // ✅ SIMPAN
-          )
-        ],
-      ),
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          centerTitle: true,
+          title: const Text(
+            "Detail Tiket",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          actions: [
 
-      body: Column(
-        children: [
+            IconButton(
+              onPressed: _save,
+              icon: const Icon(
+                Icons.check_circle,
+                color: Colors.green,
+              ),
+            )
 
-          /// CONTENT
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+          ],
+        ),
+
+        body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+                crossAxisAlignment:
+                CrossAxisAlignment.start,
+                children: [
+              /// CARD HEADER
+              Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(.05),
+                    blurRadius: 15,
+                    offset: const Offset(0, 6),
+                  )
+                ],
+              ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                CrossAxisAlignment.start,
                 children: [
 
-                  /// TITLE
-                  Text(
-                    widget.title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    children: [
+
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xff2563EB)
+                              .withOpacity(.1),
+                          borderRadius:
+                          BorderRadius.circular(15),
+                        ),
+                        child: const Icon(
+                          Icons.confirmation_number,
+                          color: Color(0xff2563EB),
+                          size: 28,
+                        ),
+                      ),
+
+                      const SizedBox(width: 15),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                          children: [
+
+                            Text(
+                              widget.title,
+                              style: const TextStyle(
+                                fontWeight:
+                                FontWeight.bold,
+                                fontSize: 22,
+                              ),
+                            ),
+
+                            const SizedBox(height: 5),
+
+                            Text(
+                              "ID Ticket : ${widget.id}",
+                              style: TextStyle(
+                                color: Colors
+                                    .grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
 
-                  /// STATUS + UPDATE
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+
                       _statusBadge(_status),
+
+                      const Spacer(),
 
                       DropdownButton<String>(
                         value: _status,
-                        items: ["Open", "Progress", "Done"]
-                            .map((e) => DropdownMenuItem(
-                          value: e,
-                          child: Text(e),
-                        ))
-                            .toList(),
+                        underline: const SizedBox(),
+                        borderRadius:
+                        BorderRadius.circular(15),
+                        items: const [
+
+                          DropdownMenuItem(
+                            value: "Open",
+                            child: Text("Open"),
+                          ),
+
+                          DropdownMenuItem(
+                            value: "Progress",
+                            child: Text("Progress"),
+                          ),
+
+                          DropdownMenuItem(
+                            value: "Done",
+                            child: Text("Done"),
+                          ),
+
+                        ],
                         onChanged: (value) {
                           if (value != null) {
                             _updateStatus(value);
@@ -132,151 +218,189 @@ class _DetailTicketPageState extends State<DetailTicketPage> {
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 16),
-
-                  /// DESC
-                  const Text(
-                    "Deskripsi",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  Text(widget.desc),
-
-                  const SizedBox(height: 20),
-
-                  /// 🔥 BUTTON ASSIGN (TAMBAH TANPA RUSAK UI)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => AssignTicketPage(
-                              ticketId: widget.id,
-                            ),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2563EB),
-                      ),
-                      child: const Text("Assign ke Helpdesk"),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  /// COMMENT
-                  const Text(
-                    "Komentar",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  ..._comments.map((c) => _commentBubble(
-                    c["sender"]!,
-                    c["message"]!,
-                  )),
                 ],
               ),
             ),
-          ),
 
-          /// INPUT COMMENT
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 5,
-                )
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _commentController,
-                    decoration: const InputDecoration(
-                      hintText: "Tulis komentar...",
-                      border: OutlineInputBorder(),
+          const SizedBox(height: 20),
+                  /// DESKRIPSI
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(.05),
+                          blurRadius: 15,
+                          offset: const Offset(0, 6),
+                        )
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                      children: [
+
+                        const Row(
+                          children: [
+
+                            Icon(
+                              Icons.description,
+                              color: Color(0xff2563EB),
+                            ),
+
+                            SizedBox(width: 8),
+
+                            Text(
+                              "Deskripsi Ticket",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                              ),
+                            ),
+
+                          ],
+                        ),
+
+                        const Divider(height: 25),
+
+                        Text(
+                          widget.desc,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            height: 1.6,
+                          ),
+                        ),
+
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _addComment,
-                )
-              ],
+
+                  const SizedBox(height: 24),
+
+                  /// ASSIGN
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                        const Color(0xff2563EB),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                          BorderRadius.circular(15),
+                        ),
+                      ),
+                      icon: const Icon(Icons.people_alt),
+                      label: const Text(
+                        "Assign Helpdesk",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      onPressed: () async {
+
+                        final result =
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                AssignTicketPage(
+                                  ticketId: widget.id,
+                                ),
+                          ),
+                        );
+
+                        if (result == true && mounted) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                "Helpdesk berhasil diassign",
+                              ),
+                            ),
+                          );
+                        }
+
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(
+                          color: Color(0xff2563EB),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                          BorderRadius.circular(15),
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.save,
+                        color: Color(0xff2563EB),
+                      ),
+                      label: const Text(
+                        "Simpan Perubahan",
+                        style: TextStyle(
+                          color: Color(0xff2563EB),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onPressed: _save,
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+
+                ],
             ),
-          )
-        ],
-      ),
+        ),
     );
   }
-
   /// STATUS BADGE
   Widget _statusBadge(String status) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 8,
+      ),
       decoration: BoxDecoration(
-        color: _statusColor(status).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
+        color: _statusColor(status).withOpacity(.12),
+        borderRadius: BorderRadius.circular(30),
       ),
       child: Text(
         status,
         style: TextStyle(
           color: _statusColor(status),
           fontWeight: FontWeight.bold,
+          fontSize: 13,
         ),
       ),
     );
   }
 
-  /// COMMENT UI
-  Widget _commentBubble(String sender, String message) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: sender == "Admin"
-            ? Colors.blue.shade50
-            : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            sender,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(message),
-        ],
-      ),
-    );
-  }
-
+  /// WARNA STATUS
   Color _statusColor(String status) {
     switch (status) {
       case "Open":
         return Colors.orange;
+
       case "Progress":
         return Colors.blue;
+
       case "Done":
         return Colors.green;
+
       default:
         return Colors.grey;
     }
